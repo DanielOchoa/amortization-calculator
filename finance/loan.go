@@ -1,8 +1,7 @@
 package finance
 
-//
 // Enums
-//
+// Type aliases
 type AccrualType = int
 type ScheduleType = float64
 

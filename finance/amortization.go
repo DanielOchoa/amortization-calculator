@@ -8,6 +8,14 @@ type Amortization struct {
 	Term float64 // in years (e.g. 30 year loan)
 }
 
+// we don't need this . yet.
+type Amortizable interface {
+	DiscountFactor() float64
+	PeriodicInterestRate() float64
+	PaymentPerPeriod() float64
+	TermInMonths() float64
+}
+
 // Diferent formulas for loan (amortization) calculations.
 
 // Calculates the `Discount Factor`. Divide principal / discount factor to get Monthly Payment
@@ -35,7 +43,7 @@ func (a *Amortization) PaymentPerPeriod() float64 {
 	return a.Principal / a.DiscountFactor()
 }
 
-// Payments per year * Term (in years)
+// Payments per year * Term (in years), or, number of total payments.
 func (a *Amortization) TermInMonths() float64 {
 	return a.Schedule * a.Term
 }
