@@ -1,3 +1,3 @@
 package finance
 
-// tbd
+// general funcs for calculations

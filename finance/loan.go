@@ -3,7 +3,7 @@ package finance
 // Enums
 // Type aliases
 type AccrualType = int
-type ScheduleType = float64
+type ScheduleType = int
 
 const (
 	CompoundedDaily   AccrualType = 0

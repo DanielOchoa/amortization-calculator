@@ -4,6 +4,7 @@ import "fmt"
 import "github.com/DanielOchoa/amortization-calculator/finance"
 
 func main() {
+	var amortTerm int = 30
 	amort := &finance.Amortization{
 		Loan: &finance.Loan{
 			Principal:    100000.00,
@@ -11,11 +12,10 @@ func main() {
 			Accrues:      finance.CompoundedYearly,
 			Schedule:     finance.Monthly,
 		},
-		Term: 30,
+		Term: amortTerm,
 	}
 
 	periodicInterestRate := amort.PeriodicInterestRate()
-	expectedPeriodicInterestRate := 0.006250
 
 	discountFactor := amort.DiscountFactor()
 	monthlyPayment := amort.PaymentPerPeriod()
@@ -24,9 +24,20 @@ func main() {
 	fmt.Printf("monthly payment: %f\n", monthlyPayment)
 	fmt.Printf("periodic int rate: %f\n", periodicInterestRate)
 
-	fmt.Print(fmt.Sprintf("%f == %f", periodicInterestRate, expectedPeriodicInterestRate))
-	fmt.Printf("%v", fmt.Sprintf("%f", periodicInterestRate) == fmt.Sprintf("%f", expectedPeriodicInterestRate))
-}
+	fmt.Print("\n")
+	fmt.Print("\n")
 
-// todo:
-// 1 calculate interest being compounded (e.g. amort tables)
+	fmt.Printf("Term: %d\n", amortTerm)
+
+	// calculate amort
+	amort.Calculate()
+
+	for _, row := range amort.Table {
+		fmt.Printf("month: %d\n", row.Month)
+		fmt.Printf("interest paid: %f\n", row.PaidInterest)
+		fmt.Printf("paid to principal: %f\n", row.PaidPrincipal)
+		fmt.Printf("pay amount: %f\n", row.Payment)
+		fmt.Printf("%f of int + %f of principal == %f\n", row.PaidInterest, row.PaidPrincipal, row.PaidInterest+row.PaidPrincipal)
+		fmt.Printf("PRINCIPAL remaining: %f\n", row.RemainingPrincipal)
+	}
+}
