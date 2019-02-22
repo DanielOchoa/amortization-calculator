@@ -8,7 +8,7 @@ import "github.com/DanielOchoa/amortization-calculator/finance"
 
 const float64EqualityThreshold = 1e-9
 
-func TestAmortization(t *testing.T) {
+func TestCalculate(t *testing.T) {
 	// case one
 	amort := &finance.Amortization{
 		Loan: &finance.Loan{
@@ -39,6 +39,22 @@ func TestAmortization(t *testing.T) {
 
 	if !isStringEqual(monthlyPayment, expectedMonthlyPayment) {
 		t.Errorf("Monthly payment mismatch: (%f, %f)", monthlyPayment, expectedMonthlyPayment)
+	}
+
+	amort.Calculate()
+
+	for index, row := range amort.Table {
+		if !isStringEqual(row.Payment, expectedMonthlyPayment) {
+			t.Errorf("Row `Payment` mismatch: (%f, %f)", row.Payment, expectedMonthlyPayment)
+		}
+		if (index + 1) != row.Month {
+			t.Errorf("Row `Month` mismatch: (%d, %d)", row.Month, index+1)
+		}
+	}
+
+	lastRow := amort.Table[len(amort.Table)-1]
+	if !isStringEqual(lastRow.RemainingBalance, 0.00) {
+		t.Errorf("Last Row remaining balance mismatch: (%f, %f)", lastRow.RemainingBalance, 0.00)
 	}
 }
 

@@ -3,14 +3,18 @@ package main
 import "fmt"
 import "github.com/DanielOchoa/amortization-calculator/finance"
 
+// TODO:
+// Display at end total int paid
+
 func main() {
 	var amortTerm int = 30
 	amort := &finance.Amortization{
 		Loan: &finance.Loan{
-			Principal:    100000.00,
-			InterestRate: 7.5,
+			Principal:    324000.00,
+			InterestRate: 4.0,
 			Accrues:      finance.CompoundedYearly,
 			Schedule:     finance.Monthly,
+			ExtraPayment: 300.00,
 		},
 		Term: amortTerm,
 	}
@@ -38,6 +42,8 @@ func main() {
 		fmt.Printf("paid to principal: %f\n", row.PaidPrincipal)
 		fmt.Printf("pay amount: %f\n", row.Payment)
 		fmt.Printf("%f of int + %f of principal == %f\n", row.PaidInterest, row.PaidPrincipal, row.PaidInterest+row.PaidPrincipal)
-		fmt.Printf("PRINCIPAL remaining: %f\n", row.RemainingPrincipal)
+		fmt.Printf("remaining balance: %f\n", row.RemainingBalance)
+		fmt.Print("\n")
 	}
+	fmt.Printf("\n\nDuration milliseconds: %d\n", amort.Elapsed())
 }

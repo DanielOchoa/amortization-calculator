@@ -1,16 +1,22 @@
 package finance
 
-import "math"
-import "fmt"
+import (
+	"math"
+	"time"
+)
 
 // An amortization is a type of loan, but with a set time table for repayment.
 type Amortization struct {
 	*Loan
-	Term  int   // in years (e.g. 30 year loan)
-	Table []Row // TODO: make Table struct for extra method calls on it.
+	Term  int // in years (e.g. 30 year loan)
+	Table []Row
+
 	// TODO: figure out an idiomatic go way of memoizing these fields
 	_termInMonths     int
 	_paymentPerPeriod float64
+
+	StartTime time.Time
+	EndTime   time.Time
 }
 
 // NOTE: Not needed yet.
@@ -22,6 +28,14 @@ type Amortizable interface {
 	Calculate()
 	GenerateRow(int, float64) Row
 	CalcInterestPaid(float64) float64
+	GetRemainingBalance() float64
+}
+
+// Trackable for metrics
+type Trackable interface {
+	Start()
+	End()
+	Elapsed()
 }
 
 // Calculates the `Discount Factor`. Divide principal / discount factor to get Monthly Payment
@@ -64,31 +78,52 @@ func (a *Amortization) TermInMonths() int {
 
 // Amortization calculation
 func (a *Amortization) Calculate() {
+	a.Start()
 	termInMonths := a.TermInMonths()
 	for month := 1; month <= termInMonths; month++ {
-		var remainingPrincipal float64
-		// get previous row remaining principal if available
-		if len(a.Table) > 0 {
-			remainingPrincipal = a.Table[len(a.Table)-1].RemainingPrincipal
-		} else {
-			// TODO: When adding field to pay extra to principal, we need to take into account remaining principal
-			// below zero.
-			remainingPrincipal = a.Loan.Principal
-		}
-		row := a.GenerateRow(month, remainingPrincipal)
+		remainingBalance := a.GetRemainingBalance()
+		row := a.GenerateRow(month, remainingBalance)
 		a.Table = append(a.Table, row)
 	}
+	a.End()
+}
+
+func (a *Amortization) GetRemainingBalance() float64 {
+	// get previous row remaining principal if available
+	var remainingBalance float64
+	if len(a.Table) > 0 {
+		remainingBalance = a.Table[len(a.Table)-1].RemainingBalance
+	} else {
+		// TODO: When adding field to pay extra to principal, we need to take into account remaining principal
+		// below zero.
+		remainingBalance = a.Loan.Principal
+	}
+	return remainingBalance
 }
 
 // Calculates a row in the Amortization Table
-func (a *Amortization) GenerateRow(month int, remainingPrincipal float64) Row {
-	paidInterest := a.CalcInterestPaid(remainingPrincipal)
+func (a *Amortization) GenerateRow(month int, remainingBalance float64) Row {
+	paidInterest := a.CalcInterestPaid(remainingBalance)
 	paidPrincipal := a.PaymentPerPeriod() - paidInterest
-	newPrincipal := remainingPrincipal - paidPrincipal
-	// Month, PaidInterest, PaidPrincipal, RemainingPrincipal, Payment
+	newPrincipal := remainingBalance - paidPrincipal
+	//a.RemainingBalance = newPrincipal // TODO: also being set on Row...
+	// Month, PaidInterest, PaidPrincipal, RemainingBalance, Payment
 	return Row{month, paidInterest, paidPrincipal, newPrincipal, a.PaymentPerPeriod()}
 }
 
-func (a *Amortization) CalcInterestPaid(remainingPrincipal float64) float64 {
-	return (remainingPrincipal * (a.Loan.InterestRate / 100)) / float64(a.Loan.Schedule)
+func (a *Amortization) CalcInterestPaid(remainingBalance float64) float64 {
+	return (remainingBalance * (a.Loan.InterestRate / 100)) / float64(a.Loan.Schedule)
+}
+
+// Functions to test how long it takes to run `Calculate`
+func (a *Amortization) Start() {
+	a.StartTime = time.Now()
+}
+
+func (a *Amortization) End() {
+	a.EndTime = time.Now()
+}
+
+func (a *Amortization) Elapsed() int64 {
+	return int64(a.EndTime.Sub(a.StartTime) / time.Millisecond)
 }

@@ -22,4 +22,5 @@ type Loan struct {
 	InterestRate float64
 	Accrues      AccrualType  // Daily or Yearly
 	Schedule     ScheduleType // How many payments per year (monthly = 12, yearly = 1)
+	ExtraPayment float64      // applied to principal. For each pay period.
 }
