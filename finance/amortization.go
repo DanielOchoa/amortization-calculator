@@ -14,12 +14,10 @@ type Amortization struct {
 	// TODO: figure out an idiomatic go way of memoizing these fields
 	_termInMonths     int
 	_paymentPerPeriod float64
-
-	StartTime time.Time
-	EndTime   time.Time
 }
 
-// NOTE: Not needed yet.
+// NOTE: Not needed yet. We need a simpler composable interface to decorate with tracking.
+/*
 type Amortizable interface {
 	DiscountFactor() float64
 	PeriodicInterestRate() float64
@@ -29,13 +27,23 @@ type Amortizable interface {
 	GenerateRow(int, float64) Row
 	CalcInterestPaid(float64) float64
 	GetRemainingBalance() float64
+}*/
+
+// Everything that implements the Calculate func...
+type Calculatable interface {
+	Calculate()
 }
 
-// Trackable for metrics
-type Trackable interface {
-	Start()
-	End()
-	Elapsed()
+type Trackable struct {
+	Elapsed      time.Duration
+	Calculatable Calculatable
+}
+
+func (t *Trackable) Calculate() {
+	startTime := time.Now()
+	t.Calculatable.Calculate()
+	endTime := time.Now()
+	t.Elapsed = endTime.Sub(startTime)
 }
 
 // Calculates the `Discount Factor`. Divide principal / discount factor to get Monthly Payment
@@ -78,14 +86,12 @@ func (a *Amortization) TermInMonths() int {
 
 // Amortization calculation
 func (a *Amortization) Calculate() {
-	a.Start()
 	termInMonths := a.TermInMonths()
 	for month := 1; month <= termInMonths; month++ {
 		remainingBalance := a.GetRemainingBalance()
 		row := a.GenerateRow(month, remainingBalance)
 		a.Table = append(a.Table, row)
 	}
-	a.End()
 }
 
 func (a *Amortization) GetRemainingBalance() float64 {
@@ -113,17 +119,4 @@ func (a *Amortization) GenerateRow(month int, remainingBalance float64) Row {
 
 func (a *Amortization) CalcInterestPaid(remainingBalance float64) float64 {
 	return (remainingBalance * (a.Loan.InterestRate / 100)) / float64(a.Loan.Schedule)
-}
-
-// Functions to test how long it takes to run `Calculate`
-func (a *Amortization) Start() {
-	a.StartTime = time.Now()
-}
-
-func (a *Amortization) End() {
-	a.EndTime = time.Now()
-}
-
-func (a *Amortization) Elapsed() int64 {
-	return int64(a.EndTime.Sub(a.StartTime) / time.Millisecond)
 }
