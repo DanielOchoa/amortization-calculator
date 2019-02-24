@@ -14,9 +14,7 @@ const (
 	Yearly  ScheduleType = 1
 )
 
-//
 // Loan type struct
-//
 type Loan struct {
 	Principal    float64
 	InterestRate float64

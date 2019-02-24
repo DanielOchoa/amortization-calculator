@@ -1,9 +1,12 @@
 package finance
 
-import (
-	"math"
-	"time"
-)
+import "math"
+
+// Row for the Table property of an Amortization
+type Row struct {
+	Month                                                  int
+	PaidInterest, PaidPrincipal, RemainingBalance, Payment float64
+}
 
 // An amortization is a type of loan, but with a set time table for repayment.
 type Amortization struct {
@@ -14,36 +17,6 @@ type Amortization struct {
 	// TODO: figure out an idiomatic go way of memoizing these fields
 	_termInMonths     int
 	_paymentPerPeriod float64
-}
-
-// NOTE: Not needed yet. We need a simpler composable interface to decorate with tracking.
-/*
-type Amortizable interface {
-	DiscountFactor() float64
-	PeriodicInterestRate() float64
-	PaymentPerPeriod() float64
-	TermInMonths() int
-	Calculate()
-	GenerateRow(int, float64) Row
-	CalcInterestPaid(float64) float64
-	GetRemainingBalance() float64
-}*/
-
-// Everything that implements the Calculate func...
-type Calculatable interface {
-	Calculate()
-}
-
-type Trackable struct {
-	Elapsed      time.Duration
-	Calculatable Calculatable
-}
-
-func (t *Trackable) Calculate() {
-	startTime := time.Now()
-	t.Calculatable.Calculate()
-	endTime := time.Now()
-	t.Elapsed = endTime.Sub(startTime)
 }
 
 // Calculates the `Discount Factor`. Divide principal / discount factor to get Monthly Payment
@@ -84,7 +57,7 @@ func (a *Amortization) TermInMonths() int {
 	return a._termInMonths
 }
 
-// Amortization calculation
+// Calculate amortization. Satifies Calculable interface.
 func (a *Amortization) Calculate() {
 	termInMonths := a.TermInMonths()
 	for month := 1; month <= termInMonths; month++ {

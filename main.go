@@ -2,10 +2,9 @@ package main
 
 import "fmt"
 import "github.com/DanielOchoa/amortization-calculator/finance"
-import "time"
 
 // TODO:
-// Display at end total int paid
+// - Display at end total interest paid
 
 func main() {
 	var amortTerm int = 30
@@ -15,7 +14,7 @@ func main() {
 			InterestRate: 4.0,
 			Accrues:      finance.CompoundedYearly,
 			Schedule:     finance.Monthly,
-			ExtraPayment: 300.00,
+			ExtraPayment: 300.00, // still to be implemented
 		},
 		Term: amortTerm,
 	}
@@ -34,10 +33,9 @@ func main() {
 
 	fmt.Printf("Term: %d\n", amortTerm)
 
-	// calculate amort through trackable to get ellapsed time of calculation
-	// TODO: Move this inside the Calculator module so as to hide this implementation
-	trackableAmort := &finance.Trackable{Calculatable: amort}
-	trackableAmort.Calculate()
+	// Create and run calculator
+	calculator := finance.NewCalculator(amort)
+	calculator.Calculate()
 
 	for _, row := range amort.Table {
 		fmt.Printf("month: %d\n", row.Month)
@@ -48,7 +46,5 @@ func main() {
 		fmt.Printf("remaining balance: %f\n", row.RemainingBalance)
 		fmt.Print("\n")
 	}
-	fmt.Printf("\n\nDuration in ms: %f\n", float64(trackableAmort.Elapsed)/float64(time.Millisecond))
-	//t := time.Now()
-	//fmt.Printf("time now: %s", t.Format(time.RFC3339))
+	fmt.Printf("\n\nDuration in ms: %f\n", calculator.ElapsedInMs())
 }
